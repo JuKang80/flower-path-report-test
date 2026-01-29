@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>꽃길 리포트 (Graph Fix)</title>
+    <title>꽃길 리포트 로직 검증기</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f4f6f8; padding: 20px; color: #333; line-height: 1.6; }
         .container { max-width: 850px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
@@ -11,34 +11,32 @@
         
         .cheat-panel { background: #2c3e50; color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
         .cheat-btn { cursor: pointer; padding: 8px 16px; font-size: 13px; background: #34495e; color: #ecf0f1; border: 1px solid #7f8c8d; border-radius: 6px; }
+        .cheat-btn:hover { background: #455a64; transform: translateY(-1px); }
         .cheat-btn.accent { border-color: #e67e22; color: #e67e22; font-weight: bold; }
         .cheat-btn.green { border-color: #2ecc71; color: #2ecc71; font-weight: bold; }
         .cheat-btn.purple { background: #8e44ad; border-color: #9b59b6; font-weight: bold; box-shadow: 0 4px 0 #6c3483; }
-        
+        .cheat-btn.purple:active { transform: translateY(4px); box-shadow: none; }
+
         .question-block { border-bottom: 1px solid #ecf0f1; padding: 25px 0; }
         .block-divider { border-top: 3px solid #3498db; margin: 40px 0 15px; padding-top: 15px; font-weight: 800; color: #3498db; font-size: 15px; }
         .q-text { font-size: 1.1rem; margin-bottom: 15px; font-weight: 600; color: #2c3e50; }
         .options { display: flex; justify-content: space-between; max-width: 550px; margin: 0 auto; background: #f9f9f9; padding: 10px 20px; border-radius: 30px; }
         .option-label { display: flex; flex-direction: column; align-items: center; cursor: pointer; font-size: 14px; }
-        .option-label input { margin-bottom: 8px; transform: scale(1.4); }
+        .option-label input { margin-bottom: 8px; transform: scale(1.4); cursor: pointer; }
 
         .nav-buttons { display: flex; justify-content: space-between; margin-top: 50px; padding-top: 20px; border-top: 2px solid #ecf0f1; }
         .nav-btn { padding: 14px 30px; cursor: pointer; background: #3498db; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
         .nav-btn:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        .result-card { border: 1px solid #ecf0f1; padding: 25px; border-radius: 16px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
+        /* 결과 화면 */
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 25px; margin-top: 30px; }
+        .result-card { border: 1px solid #ecf0f1; padding: 25px; border-radius: 16px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .card-header { font-weight: 800; margin-bottom: 20px; text-align: center; color: #2c3e50; font-size: 1.2rem; }
         
-        /* 🔥 그래프 스타일 수정 (중앙 발산) */
         .graph-wrapper { display: flex; height: 32px; background: #ecf0f1; border-radius: 16px; margin: 15px 0; overflow: hidden; position: relative; }
         .half-zone { flex: 1; display: flex; align-items: center; height: 100%; width: 50%; }
-        
-        /* 왼쪽 영역: 오른쪽 끝(중앙)에 붙여서 정렬 */
         .left-zone { justify-content: flex-end; border-right: 1px solid rgba(0,0,0,0.1); }
-        
-        /* 오른쪽 영역: 왼쪽 끝(중앙)에 붙여서 정렬 */
         .right-zone { justify-content: flex-start; }
-        
         .bar-fill { height: 100%; transition: width 1s cubic-bezier(0.22, 1, 0.36, 1); }
         .blue { background: linear-gradient(90deg, #3498db, #5dade2); border-radius: 16px 0 0 16px; }
         .red { background: linear-gradient(90deg, #e74c3c, #ec7063); border-radius: 0 16px 16px 0; }
@@ -48,24 +46,32 @@
         .desc-box { background: #f8f9fa; padding: 15px; border-radius: 10px; font-size: 14px; margin-top: 20px; line-height: 1.6; border: 1px solid #eef2f3; }
         .total-score { text-align: center; font-weight: 800; font-size: 1.3rem; color: #2c3e50; margin: 15px 0; }
 
+        /* AI 섹션 */
         .ai-section { margin-top: 50px; background: #fdf2f8; padding: 25px; border-radius: 16px; border: 2px solid #f8bbd0; }
+        .ai-title { text-align: center; color: #c2185b; font-size: 1.5rem; margin-bottom: 20px; font-weight: 800; }
+        .api-input-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .api-input { padding: 12px; width: 300px; border: 1px solid #ccc; border-radius: 8px; }
         .ai-btn { padding: 12px 25px; background: #e91e63; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #ai-result { background: #fff; padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid #fce4ec; min-height: 100px; white-space: pre-wrap; }
+        #ai-result { background: #fff; padding: 25px; border-radius: 12px; margin-top: 20px; border: 1px solid #fce4ec; font-size: 15px; line-height: 1.8; color: #333; }
+        .loading { text-align: center; color: #e91e63; font-weight: bold; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🌸 꽃길 리포트 로직 검증기</h1>
+
     <div class="cheat-panel">
-        <button class="cheat-btn" onclick="applyCheat('TYPE_A')">A형(좌)</button>
-        <button class="cheat-btn" onclick="applyCheat('TYPE_B')">B형(우)</button>
+        <span class="cheat-label">자동 입력:</span>
+        <button class="cheat-btn" onclick="applyCheat('TYPE_A')">A형(좌) 몰빵</button>
+        <button class="cheat-btn" onclick="applyCheat('TYPE_B')">B형(우) 몰빵</button>
         <button class="cheat-btn" onclick="applyCheat('ALL_5')">모두 5점</button>
         <div style="flex-basis: 100%; height: 0;"></div>
+        <span class="cheat-label">시나리오:</span>
         <button class="cheat-btn accent" onclick="applyCheat('CONFLICT_AB')">⚡ 불일치(좌/우)</button>
         <button class="cheat-btn green" onclick="applyCheat('SELF_A_PARTNER_N')">⚖️ 나:좌/너:중립</button>
-        <button class="cheat-btn purple" style="width:100%; font-weight:bold; margin-top:5px;" onclick="applyCheat('CUSTOM_SCENARIO')">✨ 커스텀 시나리오</button>
+        <button class="cheat-btn purple" style="width:100%; font-weight:bold; margin-top:5px;" onclick="applyCheat('CUSTOM_SCENARIO')">✨ 커스텀 시나리오 (복합 성향)</button>
     </div>
 
     <h2 id="page-title" style="color:#3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px;">로딩 중...</h2>
@@ -81,13 +87,10 @@
         <h2 style="margin-top:60px; text-align:center; border-top:2px solid #eee; padding-top:40px; color:#2c3e50;">📊 최종 분석 리포트</h2>
         
         <div class="ai-section">
-            <h3 style="color:#c2185b; text-align:center;">🤖 AI 심층 상담소</h3>
-            <div style="display:flex; justify-content:center; gap:10px;">
-                <input type="password" id="api-key" placeholder="OpenAI API Key (sk- شايف)" class="api-input">
-                <button class="ai-btn" onclick="callAI()">상담 요청</button>
-            </div>
-            <div style="text-align:center; margin-top:10px;">
-                <button class="cheat-btn purple" style="padding:8px 16px;" onclick="copyAiPrompt()">📋 프롬프트만 복사</button>
+            <div class="ai-title">🤖 AI 심층 상담소 (전수 조사)</div>
+            <div class="api-input-group">
+                <input type="password" id="api-key" class="api-input" placeholder="OpenAI API Key를 입력하세요" />
+                <button class="ai-btn" onclick="callAI()">심층 상담 시작</button>
             </div>
             <div id="ai-result" style="display:none;"></div>
         </div>
@@ -103,7 +106,7 @@
 
     window.onload = function() {
         if (typeof ALL_QS === 'undefined') {
-            alert("🚨 오류: questions.js 파일을 찾을 수 없습니다.");
+            document.body.innerHTML = "<div class='container'><h1 style='color:red'>🚨 데이터 로드 오류!</h1><p>questions.js 파일을 찾을 수 없습니다. 파일이 같은 폴더에 있는지 확인해주세요.</p></div>";
             return;
         }
         for(let i=1; i<=96; i++) answers[i] = 0;
@@ -118,7 +121,6 @@
         
         document.getElementById('page-title').innerText = (isPartner ? "💞 파트너 관점" : "👤 본인 성향") + ` (${page+1}/8)`;
         document.getElementById('page-title').style.color = color;
-        document.getElementById('page-title').style.borderColor = color;
 
         const start = page * 12;
         for(let i=start; i<start+12; i++) {
@@ -162,11 +164,6 @@
             if(type=='TYPE_A') answers[i] = (pos < 2) ? 5 : 1;
             else if(type=='TYPE_B') answers[i] = (pos < 2) ? 1 : 5;
             else if(type=='CONFLICT_AB') answers[i] = !isP ? (pos < 2 ? 5 : 1) : (pos < 2 ? 1 : 5);
-            else if(type=='CONFLICT_BA') answers[i] = !isP ? (pos < 2 ? 1 : 5) : (pos < 2 ? 5 : 1);
-            else if(type=='SELF_A_PARTNER_N') answers[i] = !isP ? (pos < 2 ? 5 : 1) : 3;
-            else if(type=='SELF_B_PARTNER_N') answers[i] = !isP ? (pos < 2 ? 1 : 5) : 3;
-            else if(type=='RANDOM') answers[i] = Math.floor(Math.random()*5)+1;
-            else if(type=='ALL_5') answers[i] = 5;
             else if(type=='CUSTOM_SCENARIO') {
                 const target = [0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1];
                 const bIdx = Math.floor((i-1)/4) % 12;
@@ -174,32 +171,25 @@
                 if (!isP) answers[i] = isTargetLeft ? ((pos<2)?5:1) : ((pos<2)?1:5);
                 else answers[i] = isTargetLeft ? ((pos<2)?1:5) : ((pos<2)?5:1);
             }
+            else answers[i] = 3;
         }
         render();
         document.getElementById('btn-submit').style.display = 'inline-block';
-        alert("적용 완료! 결과 보기 버튼을 누르세요.");
+        alert("치트키가 적용되었습니다. 결과 분석 보기 버튼을 누르세요.");
     }
 
     function showResult() {
         const grid = document.getElementById('result-grid'); 
         grid.innerHTML = '';
         for(let b=0; b<12; b++) {
-            let sL=0, sR=0, pL=0, pR=0;
-            for(let k=0; k<2; k++) sL += parseInt(answers[b*4+k+1]||0);
-            for(let k=2; k<4; k++) sR += parseInt(answers[b*4+k+1]||0);
-            const off = 48;
-            for(let k=0; k<2; k++) pL += parseInt(answers[b*4+k+1+off]||0);
-            for(let k=2; k<4; k++) pR += parseInt(answers[b*4+k+1+off]||0);
-            
-            let sPol = (sR/2) - (sL/2);
-            let pPol = (pR/2) - (pL/2);
+            const getPol = (off) => {
+                let l=0, r=0;
+                for(let k=0; k<2; k++) l += parseInt(answers[b*4+k+1+off]||0);
+                for(let k=2; k<4; k++) r += parseInt(answers[b*4+k+1+off]||0);
+                return (r/2) - (l/2); 
+            };
+            let sPol = getPol(0), pPol = getPol(48);
             let total = (sPol * 0.8) + (pPol * 0.2);
-            
-            // 그래프 길이 계산 (절댓값 기준 퍼센트)
-            let wLeft = total < 0 ? (Math.abs(total)/4)*100 : 0;
-            let wRight = total > 0 ? (Math.abs(total)/4)*100 : 0;
-
-            // 텍스트 생성
             const getTxt = (v, l, r) => {
                 let av = Math.abs(v); let t = v < 0 ? l : r;
                 if(av < 0.5) return `<strong>${l}/${r}</strong> 균형`;
@@ -208,26 +198,18 @@
                 if(av < 3.5) return `확고한 <strong>${t}</strong> 성향`;
                 return `매우 강한 <strong>${t}</strong> 성향`;
             };
+            let wLeft = total < 0 ? (Math.abs(total)/4)*100 : 0;
+            let wRight = total > 0 ? (Math.abs(total)/4)*100 : 0;
 
             grid.innerHTML += `<div class="result-card">
-                <div style="text-align:center; font-weight:bold; margin-bottom:10px;">${CATS[b].t}</div>
-                
+                <div class="card-header">${CATS[b].t}</div>
                 <div class="label-row"><span>${CATS[b].l}</span><span>${CATS[b].r}</span></div>
-                
                 <div class="graph-wrapper">
                     <div class="center-marker"></div>
-                    <!-- 왼쪽 영역 (Flex-End 정렬) -->
-                    <div class="half-zone left-zone">
-                        <div class="bar-fill blue" style="width: ${wLeft}%"></div>
-                    </div>
-                    <!-- 오른쪽 영역 (Flex-Start 정렬) -->
-                    <div class="half-zone right-zone">
-                        <div class="bar-fill red" style="width: ${wRight}%"></div>
-                    </div>
+                    <div class="half-zone left-zone"><div class="bar-fill blue" style="width: ${wLeft}%"></div></div>
+                    <div class="half-zone right-zone"><div class="bar-fill red" style="width: ${wRight}%"></div></div>
                 </div>
-
                 <div class="total-score">종합: ${total.toFixed(2)}</div>
-                
                 <div class="desc-box">
                     <div class="desc-line">👤 <strong>본인:</strong> 나는 ${getTxt(sPol, CATS[b].l, CATS[b].r)} (${sPol.toFixed(1)})</div>
                     <div class="desc-line">💞 <strong>파트너:</strong> 나를 ${getTxt(pPol, CATS[b].l, CATS[b].r)} (${pPol.toFixed(1)})</div>
@@ -240,31 +222,35 @@
 
     async function callAI() {
         const apiKey = document.getElementById('api-key').value.trim();
-        if(!apiKey) return alert("API Key 필요");
+        if(!apiKey) return alert("API Key를 입력해주세요!");
         const resultDiv = document.getElementById('ai-result');
         resultDiv.style.display = 'block';
-        resultDiv.innerHTML = '<div class="loading">🧠 AI가 데이터를 분석하고 있습니다...</div>';
+        resultDiv.innerHTML = '<div class="loading">🧠 AI 전문 상담사가 데이터를 전수 분석 중입니다...</div>';
 
         let dataStr = "";
         for(let b=0; b<12; b++) {
-            let sL=0, sR=0, pL=0, pR=0;
-            for(let k=0; k<2; k++) sL += parseInt(answers[b*4+k+1]||0);
-            for(let k=2; k<4; k++) sR += parseInt(answers[b*4+k+1]||0);
-            const off = 48;
-            for(let k=0; k<2; k++) pL += parseInt(answers[b*4+k+1+off]||0);
-            for(let k=2; k<4; k++) pR += parseInt(answers[b*4+k+1+off]||0);
-            let sPol = (sR/2) - (sL/2);
-            let pPol = (pR/2) - (pL/2);
-            dataStr += `[항목 ${b+1}: ${CATS[b].t}]\n- 본인의 실제 성향: ${sPol.toFixed(1)}점\n- 파트너가 보는 나의 모습: ${pPol.toFixed(1)}점\n\n`;
+            let sPol = (answers[b*4+3]+answers[b*4+4])/2 - (answers[b*4+1]+answers[b*4+2])/2;
+            let pPol = (answers[b*4+51]+answers[b*4+52])/2 - (answers[b*4+49]+answers[b*4+50])/2;
+            dataStr += `[항목 ${b+1}: ${CATS[b].t}]
+- 본인의 실제 생각: ${sPol.toFixed(1)}점
+- 파트너가 보는 나의 모습: ${pPol.toFixed(1)}점
+
+`;
         }
 
-        const sysMsg = `당신은 커플 성향 분석 전문가입니다. 아래 가이드라인을 '엄격히' 준수하세요.
-1. **절대 규칙**: '파트너 점수'는 파트너 본인의 성향이 아니라, '파트너가 관찰한 사용자의 모습'입니다. "당신은 ~한데 파트너는 ~하군요"라고 해석하세요.
-2. **어조**: 정중한 상담체 (~하십니다, ~하는 편입니다).
-3. **항목별 구조**: 
-   - 문단1: 사용자의 성향 묘사 (0점대: 유연/균형, 2점+: 확고).
-   - 문단2: 관계 역학. 점수 차이가 2.0 이상이면 "오해할 가능성", "조율이 필요한 지점" 키워드 필수 사용.
-4. **출력**: 12개 모든 항목을 하나씩 순서대로 빠짐없이 분석하세요.`;
+        const sysMsg = `당신은 커플 성향 분석 전문가입니다. 아래 가이드라인을 '엄격히' 준수하여 리포트를 작성하세요.
+
+## [분석 가이드 (Strict Rules)]
+1. **말투**: 정중하고 따뜻한 상담체 ("~하십니다", "~하는 편입니다")를 사용하세요. 단정적인 말투는 피하세요.
+2. **데이터 해석**:
+   - '본인의 실제 생각'과 '파트너가 보는 나의 모습'을 대조하여 분석하세요.
+   - 파트너 점수는 파트너 본인의 성향이 아니라, '파트너가 관찰한 사용자의 모습'임을 명심하세요.
+3. **핵심 키워드**: 점수 차이가 2.0 이상이면 **"오해할 가능성"**, **"조율이 필요한 지점"**이라는 표현을 반드시 포함하세요.
+4. **구조**: 모든 12개 항목에 대해 다음 구조를 유지하세요.
+   - [본인 성향 요약] -> [파트너 인식과의 차이 분석] -> [성장을 위한 조율 제안]
+
+## [요청사항]
+제공된 12개 모든 항목에 대해 하나도 빠짐없이 위 규칙을 적용하여 상세 리포트를 작성해주세요.`;
 
         try {
             const resp = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -272,7 +258,8 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                 body: JSON.stringify({
                     model: "gpt-3.5-turbo",
-                    messages: [{ role: "system", content: sysMsg }, { role: "user", content: `데이터:\n${dataStr}` }],
+                    messages: [{ role: "system", content: sysMsg }, { role: "user", content: `분석할 커플 데이터:
+${dataStr}` }],
                     temperature: 0.7
                 })
             });
@@ -280,61 +267,6 @@
             if(res.error) throw new Error(res.error.message);
             resultDiv.innerHTML = res.choices[0].message.content.replace(/\n/g, "<br>");
         } catch (e) { resultDiv.innerHTML = `<div style="color:red">🚨 오류: ${e.message}</div>`; }
-    }
-
-    function copyAiPrompt() {
-        let prompt = `당신은 커플들의 성향을 분석하고 미래를 예측해주는 20년 경력의 심리 상담사입니다.
-아래 **[분석 가이드]**와 **[커플 데이터]**를 바탕으로, '해석문항.md' 스타일의 정교한 리포트를 작성해주세요.
-
-## [데이터 해석 주의사항 (중요!)]
-- **[본인의 생각]**: 사용자가 스스로 평가한 본인의 성향입니다.
-- **[파트너가 보는 나]**: 파트너가 사용자를 관찰하고 평가한 점수입니다. (파트너 본인의 성향이 아님!)
-- 따라서 해석할 때 "파트너는 ~성향입니다"가 아니라, **"파트너는 당신을 ~라고 생각하고 있습니다"**라고 표현해야 합니다.
-
-## [분석 가이드 (Strict Rules)]
-1. **어조:** "~하는 편입니다", "~할 수 있습니다"와 같은 부드럽고 정중한 상담체 사용.
-2. **본인 해석 (1문단):**
-   - 0.0~0.5: 완벽한 균형 (조화로움 강조)
-   - 0.5~1.5: 약간의 경향
-   - 1.5~2.5: 뚜렷한 경향
-   - 2.5 이상: 매우 확고한 성향
-3. **관계 해석 (2문단 - 핵심):** 
-   - **일치 시 (차이 < 1.0):** "파트너 역시 000님을 ~라고 인식하며, 이는 **실제 행동과도 잘 일치**합니다. 관계에 **안정감**을 줍니다."
-   - **불일치 시 (차이 >= 2.0):** "반면 파트너는 000님을 ~라고 보지만, 때때로 이를 **'~하다'고 오해할 가능성**이 있습니다."
-   - 결론: **"이 차이는 ~에서 조율이 필요한 지점을 형성합니다."** (필수)
-
-## [커플 데이터 (Raw Data)]
-`;
-
-        for(let b=0; b<12; b++) {
-            let sL=0, sR=0, pL=0, pR=0;
-            for(let k=0; k<2; k++) sL += parseInt(answers[b*4+k+1]||0);
-            for(let k=2; k<4; k++) sR += parseInt(answers[b*4+k+1]||0);
-            const off = 48;
-            for(let k=0; k<2; k++) pL += parseInt(answers[b*4+k+1+off]||0);
-            for(let k=2; k<4; k++) pR += parseInt(answers[b*4+k+1+off]||0);
-            let sPol = (sR/2) - (sL/2);
-            let pPol = (pR/2) - (pL/2);
-            
-            prompt += `
-### ${b+1}. ${CATS[b].t}
-`;
-            prompt += `- [본인의 생각]: ${sPol.toFixed(1)}
-`;
-            prompt += `- [파트너가 보는 나]: ${pPol.toFixed(1)}
-`;
-            prompt += `- 차이: ${Math.abs(sPol - pPol).toFixed(1)}
-`;
-        }
-
-        prompt += `
-## [요청사항 (전수 조사)]
-위 **12개 모든 항목**에 대해 하나도 빠짐없이 분석 리포트를 작성하세요.
-각 항목마다 [본인 성향 / 파트너 인식 차이 / 조언]을 포함하여 명확하게 서술하세요.`;
-
-        navigator.clipboard.writeText(prompt).then(() => {
-            alert("✅ [전수조사용] 프롬프트가 복사되었습니다!\nChatGPT에 붙여넣기(Ctrl+V) 하세요.");
-        }).catch(err => alert("복사 실패!"));
     }
 </script>
 </body>

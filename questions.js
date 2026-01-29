@@ -1,4 +1,4 @@
-// 🌸 꽃길 리포트 데이터 (Questions & Categories)
+// 🌸 꽃길 리포트: 데이터 소스 파일
 
 const CATS = [
     { t: "현재중심 ↔ 미래지향", l: "현재중심", r: "미래지향" },
@@ -66,5 +66,5 @@ const SELF_QS = [
     "나는 완벽한 계획을 짜느라 망설이기보다, 일단 시작하고 나서 고쳐나가는 편이다."
 ];
 
-// 파트너 문항 자동 생성
-const ALL_QS = [...SELF_QS, ...SELF_QS.map(s => "파트너가 보기에 " + s)];
+const PARTNER_QS = SELF_QS.map(q => "파트너가 보기에 " + q);
+const ALL_QS = [...SELF_QS, ...PARTNER_QS];
